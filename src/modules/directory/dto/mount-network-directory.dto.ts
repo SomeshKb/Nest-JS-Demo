@@ -1,8 +1,9 @@
-import { IsString, IsNotEmpty } from "class-validator";
+import { IsString, IsNotEmpty, IsUrl } from "class-validator";
 
 export class MountNetworkDirectoryDto {
   @IsString()
   @IsNotEmpty()
+  @IsUrl()
   networkPath: string;
 
   @IsString()
