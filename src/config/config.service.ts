@@ -1,16 +1,10 @@
 import { Injectable } from "@nestjs/common";
-import { createLogger, format, transports } from "winston";
 import { APP_CONSTANTS } from "../common/constants/app.constants";
+import { LoggerService } from "../common/logger/logger.service";
 
 @Injectable()
 export class ConfigService {
-  private readonly logger = createLogger({
-    level: "info",
-    format: format.combine(format.timestamp(), format.json()),
-    transports: [new transports.Console()],
-  });
-
-  constructor() {
+  constructor(private readonly logger: LoggerService) {
     this.validateEnvironmentVariables();
   }
 

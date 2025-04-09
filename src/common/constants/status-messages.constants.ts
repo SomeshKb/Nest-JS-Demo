@@ -5,9 +5,10 @@ export enum ErrorMessages {
   FAILED_TO_LIST_FILES = "Failed to list files by extension",
   FAILED_TO_MOUNT = "Failed to mount directory",
   FAILED_TO_UNMOUNT = "Failed to unmount directory",
+  COMMAND_EXECUTION_FAILED = "Command execution failed",
 }
 
 export enum SuccessMessages {
-  MOUNT_SUCCESS = "Successfully mounted directory",
-  UNMOUNT_SUCCESS = "Successfully unmounted directory",
+  MOUNT_SUCCESS = "Mounted successfully",
+  UNMOUNT_SUCCESS = "Unmounted successfully",
 }

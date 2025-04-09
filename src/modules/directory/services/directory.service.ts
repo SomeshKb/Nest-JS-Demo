@@ -5,8 +5,13 @@ import * as fs from "fs/promises";
 import { LoggerService } from "src/common/logger/logger.service";
 import { CustomError } from "src/common/errors/custom-error";
 import { ErrorUtil } from "src/common/utils/error.util";
-import { ErrorMessages } from "src/common/constants/string.constants";
 import { ConfigService } from "src/config/config.service";
+import { ResponseData } from "src/common/types/response-data.type";
+import { DirectoryEntry } from "../types/directory.types";
+import {
+  ErrorMessages,
+  SuccessMessages,
+} from "src/common/constants/status-messages.constants";
 
 @Injectable()
 export class DirectoryService {
@@ -15,12 +20,8 @@ export class DirectoryService {
     private readonly configService: ConfigService,
   ) {}
 
-  async listDirectories(): Promise<{ name: string; isDirectory: boolean }[]> {
+  async listDirectories(): Promise<DirectoryEntry[]> {
     const mountPath = this.configService.get("MOUNT_POINT");
-
-    if (!mountPath || typeof mountPath !== "string") {
-      throw new CustomError(ErrorMessages.PATH_UNDEFINED);
-    }
 
     try {
       this.logger.info(`Listing directories in path: ${mountPath}`);
@@ -42,10 +43,6 @@ export class DirectoryService {
   async listFilesByExtension(): Promise<string[]> {
     const mountPath = this.configService.get("MOUNT_POINT");
     const extension = this.configService.get("FILE_EXTENSION");
-
-    if (!mountPath || !extension) {
-      throw new CustomError(ErrorMessages.PATH_UNDEFINED);
-    }
 
     try {
       const files = await fs.readdir(mountPath, { withFileTypes: true });
@@ -71,12 +68,8 @@ export class DirectoryService {
     networkPath: string,
     username: string,
     password: string,
-  ): Promise<void> {
+  ): Promise<ResponseData> {
     const mountPoint = this.configService.get("MOUNT_POINT");
-
-    if (!networkPath || !mountPoint || !username || !password) {
-      throw new CustomError(ErrorMessages.PATH_UNDEFINED);
-    }
 
     this.logger.info(
       `Mounting network directory at path: ${networkPath} to mount point: ${mountPoint}`,
@@ -89,19 +82,20 @@ export class DirectoryService {
       mountPoint,
       `username=${username},password=${password}`,
     ]);
+
+    return { data: null, message: SuccessMessages.MOUNT_SUCCESS };
   }
 
-  async unmountNetworkDirectory(): Promise<void> {
+  async unmountNetworkDirectory(): Promise<ResponseData> {
     const mountPoint = this.configService.get("MOUNT_POINT");
-
-    if (!mountPoint) {
-      throw new CustomError(ErrorMessages.PATH_UNDEFINED);
-    }
 
     this.logger.info(
       `Unmounting network directory at mount point: ${mountPoint}`,
     );
+
     await this.executeCommand("umount", [mountPoint]);
+
+    return { data: null, message: SuccessMessages.UNMOUNT_SUCCESS };
   }
 
   private async executeCommand(command: string, args: string[]): Promise<void> {
@@ -109,10 +103,17 @@ export class DirectoryService {
       const process = spawn("sudo", [command, ...args]);
 
       process.on("error", (error) => {
+        const errorMessage =
+          command === "mount"
+            ? ErrorMessages.FAILED_TO_MOUNT
+            : command === "umount"
+              ? ErrorMessages.FAILED_TO_UNMOUNT
+              : ErrorMessages.COMMAND_EXECUTION_FAILED;
+
         this.logger.error(`Error executing command: ${command}`, {
           error: error.message,
         });
-        reject(new CustomError(ErrorMessages.FAILED_TO_MOUNT));
+        reject(new CustomError(errorMessage));
       });
 
       process.on("close", (code) => {
@@ -120,8 +121,13 @@ export class DirectoryService {
           this.logger.info(`Command executed successfully: ${command}`);
           resolve();
         } else {
+          const errorMessage =
+            command === "mount"
+              ? ErrorMessages.FAILED_TO_MOUNT
+              : ErrorMessages.FAILED_TO_UNMOUNT;
+
           this.logger.error(`Command failed with code: ${code}`, { code });
-          reject(new CustomError(ErrorMessages.FAILED_TO_MOUNT));
+          reject(new CustomError(errorMessage));
         }
       });
     });

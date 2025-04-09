@@ -45,4 +45,30 @@ describe("DirectoryService", () => {
     const result = await service.listFilesByExtension();
     expect(result).toEqual(["./file1.txt"]);
   });
+
+  it("should throw an error if MOUNT_POINT is undefined in listDirectories", async () => {
+    jest.spyOn(service["configService"], "get").mockReturnValue("");
+
+    await expect(service.listDirectories()).rejects.toThrow(
+      "Path is undefined or null",
+    );
+  });
+
+  it("should throw an error if readdir fails in listDirectories", async () => {
+    jest.spyOn(fs, "readdir").mockRejectedValue(new Error("Mocked error"));
+
+    await expect(service.listDirectories()).rejects.toThrow(
+      "Error reading directories: Mocked error",
+    );
+  });
+
+  it("should throw an error if executeCommand fails in mountNetworkDirectory", async () => {
+    jest
+      .spyOn(service as any, "executeCommand")
+      .mockRejectedValue(new Error("Mocked command error"));
+
+    await expect(
+      service.mountNetworkDirectory("networkPath", "username", "password"),
+    ).rejects.toThrow("Failed to mount directory");
+  });
 });
