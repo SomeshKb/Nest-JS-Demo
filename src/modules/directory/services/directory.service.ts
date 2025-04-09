@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { spawn } from "child_process";
+import { spawn, spawnSync } from "child_process";
 import path from "path";
 import * as fs from "fs/promises";
 import { LoggerService } from "src/common/logger/logger.service";
@@ -131,5 +131,16 @@ export class DirectoryService {
         }
       });
     });
+  }
+
+  private isNASAlreadtyMounted(mountLocation: string): boolean {
+    const result = spawnSync("findmnt", ["-rn", "-o", "TARGET", mountLocation]);
+
+    if (result.error) {
+      return false;
+    }
+
+    const output = result.stdout.toString().trim();
+    return output === mountLocation;
   }
 }
