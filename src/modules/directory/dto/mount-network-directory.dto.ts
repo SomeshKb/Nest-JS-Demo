@@ -12,8 +12,4 @@ export class MountNetworkDirectoryDto {
   @IsString()
   @IsNotEmpty()
   password: string;
-
-  @IsString()
-  @IsNotEmpty()
-  mountPoint: string;
 }

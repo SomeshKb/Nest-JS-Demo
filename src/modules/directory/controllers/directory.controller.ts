@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Query, Body } from "@nestjs/common";
+import { Controller, Get, Post, Body } from "@nestjs/common";
 import { MountNetworkDirectoryDto } from "../dto/mount-network-directory.dto";
 import { DirectoryService } from "../services/directory.service";
 
@@ -7,16 +7,13 @@ export class DirectoryController {
   constructor(private readonly directoryService: DirectoryService) {}
 
   @Get()
-  async listDirectories(@Query("path") path: string) {
-    return this.directoryService.listDirectories(path);
+  async listDirectories() {
+    return this.directoryService.listDirectories();
   }
 
   @Get("files")
-  async listFilesByExtension(
-    @Query("path") path: string,
-    @Query("extension") extension: string,
-  ) {
-    return this.directoryService.listFilesByExtension(path, extension);
+  async listFilesByExtension() {
+    return this.directoryService.listFilesByExtension();
   }
 
   @Post("mount")
@@ -25,12 +22,11 @@ export class DirectoryController {
       body.networkPath,
       body.username,
       body.password,
-      body.mountPoint,
     );
   }
 
   @Post("unmount")
-  async unmountNetworkDirectory(@Body("mountPoint") mountPoint: string) {
-    return this.directoryService.unmountNetworkDirectory(mountPoint);
+  async unmountNetworkDirectory() {
+    return this.directoryService.unmountNetworkDirectory();
   }
 }
