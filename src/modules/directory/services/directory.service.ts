@@ -39,7 +39,9 @@ export class DirectoryService {
       const matchingFiles = files
         .filter(
           (file) =>
-            file.isFile() && path.extname(file.name).slice(1) === extension,
+            file.isFile() &&
+            path.extname(file.name) &&
+            path.extname(file.name).slice(1) === extension,
         )
         .map((file) => file.name);
       return matchingFiles;
@@ -47,7 +49,9 @@ export class DirectoryService {
       this.logger.error(STRING_CONSTANTS.ERRORS.READ_FILES_BY_EXTENSION, {
         error: error.message,
       });
-      throw new Error(STRING_CONSTANTS.ERRORS.FAILED_TO_LIST_FILES);
+      throw new Error(
+        `${STRING_CONSTANTS.ERRORS.FAILED_TO_LIST_FILES}: ${error.message}`,
+      );
     }
   }
 

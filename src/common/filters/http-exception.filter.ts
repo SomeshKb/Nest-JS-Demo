@@ -26,13 +26,21 @@ export class HttpExceptionFilter implements ExceptionFilter {
         ? exception.getResponse()
         : "Internal server error";
 
-    // Log the error
-    this.logger.error("Exception caught", {
-      status,
-      message,
-      path: request.url,
-      stack: exception instanceof Error ? exception.stack : null,
-    });
+    // Log the error with appropriate log level
+    if (status >= 500) {
+      this.logger.error("Exception caught", {
+        status,
+        message,
+        path: request.url,
+        stack: exception instanceof Error ? exception.stack : null,
+      });
+    } else {
+      this.logger.warn("Exception caught", {
+        status,
+        message,
+        path: request.url,
+      });
+    }
 
     // Send a formatted error response
     response.status(status).json({
