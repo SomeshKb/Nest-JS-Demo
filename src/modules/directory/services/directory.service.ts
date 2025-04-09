@@ -1,17 +1,17 @@
 import { Injectable } from "@nestjs/common";
-import { spawn, spawnSync } from "child_process";
-import path from "path";
+import { spawn } from "child_process";
+import * as path from "path";
 import * as fs from "fs/promises";
-import { LoggerService } from "src/common/logger/logger.service";
-import { CustomError } from "src/common/errors/custom-error";
-import { ErrorUtil } from "src/common/utils/error.util";
-import { ConfigService } from "src/config/config.service";
-import { ResponseData } from "src/common/types/response-data.type";
+import { LoggerService } from "../../../common/logger/logger.service";
+import { CustomError } from "../../../common/errors/custom-error";
+import { ErrorUtil } from "../../../common/utils/error.util";
+import { ConfigService } from "../../../config/config.service";
+import { ResponseData } from "../../../common/types/response-data.type";
 import { DirectoryEntry } from "../types/directory.types";
 import {
   ErrorMessages,
   SuccessMessages,
-} from "src/common/constants/status-messages.constants";
+} from "../../../common/constants/status-messages.constants";
 
 @Injectable()
 export class DirectoryService {
@@ -41,27 +41,18 @@ export class DirectoryService {
   }
 
   async listFilesByExtension(): Promise<string[]> {
-    const mountPath = this.configService.get("MOUNT_POINT");
-    const extension = this.configService.get("FILE_EXTENSION");
-
-    try {
-      const files = await fs.readdir(mountPath, { withFileTypes: true });
-      return files
-        .filter(
-          (file) =>
-            file.isFile() &&
-            path.extname(file.name).slice(1).toLowerCase() ===
-              extension.toLowerCase(),
-        )
-        .map((file) => path.join(mountPath, file.name));
-    } catch (error) {
-      ErrorUtil.logAndThrowError(
-        this.logger,
-        ErrorMessages.READ_FILES_BY_EXTENSION,
-        error,
-        mountPath,
+    const mountPoint = this.configService.get("MOUNT_POINT");
+    const fileExtension = this.configService.get("FILE_EXTENSION");
+    return fs
+      .readdir(mountPoint, { withFileTypes: true })
+      .then((files) =>
+        files
+          .filter(
+            (file) =>
+              file.isFile() && path.extname(file.name) === `.${fileExtension}`,
+          )
+          .map((file) => path.join(mountPoint, file.name)),
       );
-    }
   }
 
   async mountNetworkDirectory(
@@ -133,14 +124,14 @@ export class DirectoryService {
     });
   }
 
-  private isNASAlreadtyMounted(mountLocation: string): boolean {
-    const result = spawnSync("findmnt", ["-rn", "-o", "TARGET", mountLocation]);
+  // private isNASAlreadtyMounted(mountLocation: string): boolean {
+  //   const result = spawnSync("findmnt", ["-rn", "-o", "TARGET", mountLocation]);
 
-    if (result.error) {
-      return false;
-    }
+  //   if (result.error) {
+  //     return false;
+  //   }
 
-    const output = result.stdout.toString().trim();
-    return output === mountLocation;
-  }
+  //   const output = result.stdout.toString().trim();
+  //   return output === mountLocation;
+  // }
 }
